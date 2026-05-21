@@ -179,7 +179,7 @@ function initFormController() {
       name: name,
       date: date,
       type: state.activeLeaveType,
-      reason: reason || '',
+      reason: reason || state.activeLeaveType,
       synced: false,
       timestamp: new Date().toISOString()
     }));
@@ -192,6 +192,7 @@ function initFormController() {
     
     // ล้างฟอร์ม
     form.reset();
+    document.getElementById('ai-fill-text').value = ''; // เคลียร์ช่องป้อนข้อมูล AI Quick-fill
     typeCards.forEach(c => c.classList.remove('active'));
     document.querySelector('.type-card[data-type="ลาป่วย"]').classList.add('active');
     state.activeLeaveType = 'ลาป่วย';
@@ -221,7 +222,7 @@ function updateTicketPreview() {
   const startDateVal = document.getElementById('start-date').value;
   const isRange = document.getElementById('is-range').checked;
   const endDateVal = document.getElementById('end-date').value;
-  const reason = document.getElementById('reason').value.trim() || 'ไม่มีระบุ';
+  const reason = document.getElementById('reason').value.trim() || state.activeLeaveType;
   
   document.getElementById('preview-name').textContent = name;
   document.getElementById('preview-type').textContent = state.activeLeaveType;
