@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ระบบบันทึกข้อมูลการลาอัจฉริยะ เชื่อมต่อ Google Sheets และขับเคลื่อนด้วยระบบวิเคราะห์เสียงและภาษาด้วย Gemini AI">
+  <title>Leave Request & AI Dashboard Portal</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- ==================== SIDEBAR NAVIGATION (Desktop) ==================== -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-logo">L</div>
+        <div class="brand-title">
+          <h1>LeavePortal</h1>
+          <p>AI Smart Tracker</p>
+        </div>
+      </div>
+      
+      <ul class="nav-links">
+        <li class="nav-item">
+          <button class="nav-btn active" data-view="dashboard">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            Dashboard
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-view="leave">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            บันทึกการลา
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-view="settings">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            ตั้งค่าระบบ
+          </button>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <div class="connection-dot"></div>
+        <span class="connection-text">กำลังตรวจสอบชีต...</span>
+      </div>
+    </aside>
+    
+    <!-- ==================== MOBILE BOTTOM NAVIGATION ==================== -->
+    <nav class="mobile-nav">
+      <button class="mobile-nav-btn active" data-view="dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="leave">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+        <span>บันทึกการลา</span>
+      </button>
+      <button class="mobile-nav-btn" data-view="settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>ตั้งค่า</span>
+      </button>
+    </nav>
+    
+    <!-- ==================== MAIN CONTENT WINDOW ==================== -->
+    <main class="main-content">
+      
+      <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+      <section id="dashboard-view" class="app-view active">
+        <div class="view-header">
+          <h2>Dashboard วิเคราะห์ข้อมูล</h2>
+          <p>ระบบบันทึกวันลาแบบเรียลไทม์ และสถิติรวมทั้งหมดภายในองค์กร</p>
+        </div>
+        
+        <!-- สถิติตัวเลขย่อ (Leave Stats Overview Cards) -->
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-icon sick">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">ลาป่วย</span>
+              <span class="stat-value"><span id="stat-sick">0</span><span class="stat-unit">วัน</span></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon personal">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">ลากิจ</span>
+              <span class="stat-value"><span id="stat-personal">0</span><span class="stat-unit">วัน</span></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon emergency">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">ลาฉุกเฉิน</span>
+              <span class="stat-value"><span id="stat-emergency">0</span><span class="stat-unit">วัน</span></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon vacation">
+              <svg viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">ลาพักร้อน</span>
+              <span class="stat-value"><span id="stat-vacation">0</span><span class="stat-unit">วัน</span></span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Dashboard Content Grid -->
+        <div class="dashboard-grid">
+          
+          <!-- ฝั่งซ้าย: กราฟสถิติ + ตารางประวัติ -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            
+            <!-- กราฟ Chart.js -->
+            <div class="glass-card analytics-chart-container">
+              <div class="chart-header">
+                <h3 class="chart-title">สัดส่วนและแนวโน้มการลา</h3>
+              </div>
+              <div class="canvas-wrapper">
+                <canvas id="leaveTypeChart"></canvas>
+              </div>
+            </div>
+            
+            <!-- ตารางรายการประวัติล่าสุด -->
+            <div class="glass-card history-section">
+              <div class="chart-header">
+                <h3 class="chart-title">รายการลาล่าสุด (10 รายการล่าสุด)</h3>
+              </div>
+              
+              <!-- Empty State -->
+              <div id="history-empty-state" class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                <p>ยังไม่มีรายการบันทึกการลา</p>
+                <p style="font-size: 0.75rem;">คุณสามารถเพิ่มข้อมูลที่หน้า "บันทึกการลา" หรือใช้ AI สั่งการด้วยเสียงได้เลยครับ</p>
+              </div>
+              
+              <!-- Table Wrapper -->
+              <div id="history-table-wrapper" class="table-wrapper" style="display: none;">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>ชื่อพนักงาน</th>
+                      <th>วันที่ลางาน</th>
+                      <th>ประเภทการลา</th>
+                      <th>เหตุผลการลา</th>
+                      <th>สถานะคลาวด์</th>
+                      <th style="text-align: right;">การจัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-table-body">
+                    <!-- โหลดแถวข้อมูลจาก app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ฝั่งขวา: แชทบอทวิเคราะห์วันลา (AI Chat Dashboard) -->
+          <div>
+            <div class="glass-card ai-assistant-card">
+              <div class="ai-card-header">
+                <div class="ai-avatar">
+                  <svg viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h4l3 3 3-3h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 3.3c1.49 0 2.7 1.21 2.7 2.7 0 1.49-1.21 2.7-2.7 2.7-1.49 0-2.7-1.21-2.7-2.7 0-1.49 1.21-2.7 2.7-2.7zM18 16H6v-.9c0-2 4-3.1 6-3.1s6 1.1 6 3.1v.9z"/></svg>
+                </div>
+                <div class="ai-header-info">
+                  <h3>ผู้ช่วยวิเคราะห์ข้อมูล AI</h3>
+                  <p>ขับเคลื่อนด้วย Gemini 2.5 Flash</p>
+                </div>
+              </div>
+              
+              <!-- ข้อความการคุยแชท -->
+              <div id="chat-messages" class="chat-messages">
+                <div class="chat-bubble bot">
+                  สวัสดีครับ! ผมเป็นผู้ช่วย AI ประจำหน้า Dashboard 📊<br>
+                  คุณสามารถพิมพ์สอบถามความเคลื่อนไหวเกี่ยวกับข้อมูลการลา หรือสั่งให้ผมค้นหาสถิติได้เลยนะครับ
+                </div>
+              </div>
+              
+              <!-- ช่องพิมพ์แชทคำถาม -->
+              <div class="chat-input-wrapper">
+                <input type="text" id="chat-input-field" class="chat-input" placeholder="ถาม AI... เช่น 'วันนี้ใครลาบ้าง?'" autocomplete="off">
+                <button id="chat-mic-btn" class="chat-mic-btn" title="สั่งด้วยเสียง (Speech-to-Text)">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" fill="currentColor"/></svg>
+                </button>
+                <button id="chat-send-btn" class="chat-send-btn">
+                  <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+              </div>
+              
+              <!-- เมนูคำถามแนะนำด่วน -->
+              <div class="suggested-chips">
+                <div class="suggested-chip">วันนี้ใครลาบ้าง?</div>
+                <div class="suggested-chip">ณธัฏฑ์ลาป่วยทั้งหมดกี่วัน?</div>
+                <div class="suggested-chip">ใครลาพักร้อนบ้าง?</div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <!-- ==================== VIEW 2: LEAVE REQUEST FORM ==================== -->
+      <section id="leave-view" class="app-view">
+        <div class="view-header">
+          <h2>บันทึกข้อมูลการลา</h2>
+          <p>ขออนุมัติลา และส่งข้อมูลง่ายๆ ด้วยการพิมพ์บอก AI หรือกรอกข้อมูลด้วยตัวเอง</p>
+        </div>
+        
+        <div class="leave-view-container">
+          
+          <!-- ฝั่งซ้าย: ช่องส่งคำสั่งด่วน AI + ฟอร์มกรอกจริง -->
+          <div>
+            
+            <!-- AI Quick-Fill Glowing Card -->
+            <div class="glass-card ai-quick-fill-card">
+              <h3 class="form-title" style="margin-bottom: 0.75rem; color: #c084fc;">
+                <svg viewBox="0 0 24 24" width="22" height="22" style="fill: currentColor; color: var(--accent-purple);"><path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h4l3 3 3-3h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 3.3c1.49 0 2.7 1.21 2.7 2.7 0 1.49-1.21 2.7-2.7 2.7-1.49 0-2.7-1.21-2.7-2.7 0-1.49 1.21-2.7 2.7-2.7zM18 16H6v-.9c0-2 4-3.1 6-3.1s6 1.1 6 3.1v.9z"/></svg>
+                สั่งงานด้วยข้อความ/เสียง (AI Quick-Fill)
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                พิมพ์หรือแตะไอคอนไมโครโฟนเพื่อพูดคำสั่งลา เช่น: <strong>"ณธัฏฑ์ลาพักร้อน 5 - 7 มิถุนายน ไปเที่ยวญี่ปุ่น"</strong>
+              </p>
+              
+              <div class="ai-quick-fill-wrapper">
+                <input type="text" id="ai-fill-text" class="ai-fill-input" placeholder="พิมพ์คำสั่งลาที่นี่..." autocomplete="off">
+                
+                <button id="ai-mic-btn" class="ai-mic-btn" title="สั่งด้วยเสียง (Speech-to-Text)">
+                  <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" fill="currentColor"/></svg>
+                </button>
+                
+                <button id="ai-fill-submit" class="ai-fill-btn" title="วิเคราะห์คำขอ">
+                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                </button>
+              </div>
+              
+              <div class="ai-hint">
+                <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                <span>รองรับการแปลงช่วงวันที่ข้ามเดือนและภาษาไทยเต็มรูปแบบ</span>
+              </div>
+            </div>
+            
+            <!-- Manual Form -->
+            <div class="glass-card">
+              <h3 class="form-title">
+                <svg viewBox="0 0 24 24" width="22" height="22" style="fill: currentColor; color: var(--accent-cyan);"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                กรอกข้อมูลขออนุมัติลา
+              </h3>
+              
+              <form id="leave-form">
+                
+                <div class="form-group">
+                  <label for="name">ชื่อผู้ลา *</label>
+                  <input type="text" id="name" class="form-input" placeholder="กรอกชื่อ-นามสกุลจริง" required>
+                </div>
+                
+                <div class="form-group">
+                  <label>ประเภทการลา *</label>
+                  <div class="type-selector-grid">
+                    <div class="type-card active sick" data-type="ลาป่วย">
+                      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                      <span>ลาป่วย</span>
+                    </div>
+                    <div class="type-card personal" data-type="ลากิจ">
+                      <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                      <span>ลากิจ</span>
+                    </div>
+                    <div class="type-card emergency" data-type="ลาฉุกเฉิน">
+                      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                      <span>ลาฉุกเฉิน</span>
+                    </div>
+                    <div class="type-card vacation" data-type="ลาพักร้อน">
+                      <svg viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                      <span>ลาพักร้อน</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- วันที่ลาและประเภทช่วงวัน -->
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="margin-bottom: 0;">วันที่ลาหยุด *</label>
+                    <div class="date-toggle-container">
+                      <label class="switch">
+                        <input type="checkbox" id="is-range">
+                        <span class="slider"></span>
+                      </label>
+                      <span class="switch-label">ระบุเป็นช่วงวันที่</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <div>
+                      <input type="date" id="start-date" class="form-input" required>
+                    </div>
+                    <div id="end-date-group" style="display: none;">
+                      <input type="date" id="end-date" class="form-input">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="reason">เหตุผลในการลาหยุด (Optional)</label>
+                  <textarea id="reason" class="form-input" rows="3" placeholder="ระบุเหตุผลประกอบการลา (ถ้ามี)"></textarea>
+                </div>
+                
+                <button type="submit" class="primary-btn">
+                  <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  บันทึกข้อมูลและส่ง Google Sheet
+                </button>
+                
+              </form>
+            </div>
+          </div>
+          
+          <!-- ฝั่งขวา: Live Ticket Preview ตั๋วขออนุมัติลางามๆ -->
+          <div class="preview-card-container">
+            <div style="position: sticky; top: 2rem;">
+              <h3 class="form-title" style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 1rem;">
+                ตั๋วจำลองการลาหยุด (Ticket Preview)
+              </h3>
+              
+              <div id="ticket" class="ticket-preview">
+                <div class="ticket-preview-right-circle"></div>
+                <div class="ticket-header">
+                  <span class="ticket-brand">LEAVE REQ TICKET</span>
+                  <span class="ticket-status">รอประมวลผล</span>
+                </div>
+                
+                <div class="ticket-body">
+                  <div class="ticket-row">
+                    <div class="ticket-label">ชื่อผู้ขออนุมัติลา</div>
+                    <div id="preview-name" class="ticket-val">ชื่อพนักงาน</div>
+                  </div>
+                  
+                  <div class="ticket-row">
+                    <div class="ticket-label">ประเภทการลาหยุด</div>
+                    <div id="preview-type" class="ticket-val type">ลาป่วย</div>
+                  </div>
+                  
+                  <div class="ticket-dates-grid">
+                    <div>
+                      <div class="ticket-label">วันเริ่มต้นหยุด</div>
+                      <div id="preview-start-date" class="ticket-val">ระบุวันที่</div>
+                    </div>
+                    <div>
+                      <div class="ticket-label">วันสุดท้ายหยุด</div>
+                      <div id="preview-end-date" class="ticket-val">-</div>
+                    </div>
+                  </div>
+                  
+                  <div class="ticket-row" style="margin-bottom: 0;">
+                    <div class="ticket-label">เหตุผลประกอบการลา</div>
+                    <div id="preview-reason" class="ticket-val" style="font-size: 0.9rem; font-weight: 400; color: var(--text-secondary);">ไม่มีระบุ</div>
+                  </div>
+                </div>
+                
+                <div class="ticket-footer">
+                  <div id="preview-days-badge" class="ticket-days-badge" style="display: none;">
+                    ยอดรวมหยุด: <span id="preview-days">1 วัน</span>
+                  </div>
+                  <div class="ticket-stamp">SYSTEM ONLINE</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <!-- ==================== VIEW 3: SETTINGS ==================== -->
+      <section id="settings-view" class="app-view">
+        <div class="view-header">
+          <h2>ตั้งค่าการเชื่อมต่อ API</h2>
+          <p>เชื่อมโยงระบบบันทึกวันลากับ Google Sheets และผู้ช่วยสมองกล Gemini AI เพื่อเพิ่มพลังการประมวลผลภาษาธรรมชาติ</p>
+        </div>
+        
+        <div class="settings-grid">
+          
+          <!-- ฝั่งซ้าย: ฟิลด์ใส่ URLs และ Keys -->
+          <div>
+            
+            <!-- Google Sheets Settings -->
+            <div class="glass-card setting-card">
+              <h3 class="setting-card-title" style="color: var(--accent-cyan);">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                การเชื่อมต่อ Google Sheets API
+              </h3>
+              
+              <div class="form-group">
+                <label for="sheet-url-input">Google Apps Script Web App URL *</label>
+                <input type="url" id="sheet-url-input" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px;">
+                  ระบุ URL ที่ได้จากการกด "Deploy > Web App" ใน Apps Script ของ Google Sheets (ดูขั้นตอนการทำในฝั่งคู่มือช่วยเหลือได้เลยครับ)
+                </p>
+              </div>
+            </div>
+            
+            <!-- Gemini Settings -->
+            <div class="glass-card setting-card">
+              <h3 class="setting-card-title" style="color: var(--accent-purple);">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                การเปิดใช้ฟีเจอร์เสียงและภาษาอัจฉริยะ (Gemini AI Key)
+              </h3>
+              
+              <div class="form-group">
+                <label for="gemini-key-input">Gemini API Key (Optional)</label>
+                <input type="password" id="gemini-key-input" class="form-input" placeholder="AIzaSy...">
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px;">
+                  ระบุ API Key เพื่อเปิดใช้ระบบแปลความหมายภาษาไทยและอังกฤษอัจฉริยะ และ แชทบอทตอบคำถามบน Dashboard สามารถขอ API Key ได้ฟรีผ่านทาง <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 500;">Google AI Studio</a>
+                </p>
+              </div>
+            </div>
+            
+            <!-- Save Button -->
+            <button id="save-settings-btn" class="primary-btn" style="margin-top: 0;">
+              <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+              บันทึกการตั้งค่าทั้งหมด
+            </button>
+            
+          </div>
+          
+          <!-- ฝั่งขวา: คู่มือประกอบการสร้าง Apps Script -->
+          <div>
+            <div class="glass-card guide-card">
+              <h3 class="setting-card-title">คู่มือเชื่อมโยง Google Sheet ใน 3 ขั้นตอน</h3>
+              
+              <ul class="guide-steps">
+                <li class="guide-step">
+                  <div class="step-num">1</div>
+                  <div class="step-content">
+                    สร้างไฟล์ Google Sheets ขึ้นมา แล้วเลือกแท็บด้านบน <strong>ส่วนขยาย (Extensions) > Apps Script</strong>
+                  </div>
+                </li>
+                <li class="guide-step">
+                  <div class="step-num">2</div>
+                  <div class="step-content">
+                    คัดลอกโค้ดสคริปต์ด้านล่างนี้ ไปลบโค้ดเดิมทั้งหมดในหน้าต่าง Apps Script แล้ววางโค้ดสคริปต์นี้ลงไปแทน
+                    
+                    <!-- โค้ดสคริปต์และปุ่มก๊อปปี้ -->
+                    <div class="code-box-wrapper">
+                      <div class="code-header">
+                        <span class="code-title">google_apps_script.js</span>
+                        <button id="copy-code-btn" class="copy-code-btn">คัดลอกโค้ด</button>
+                      </div>
+                      <div id="code-guide-area" class="code-area">/* กำลังโหลดโค้ดสคริปต์... */</div>
+                    </div>
+                  </div>
+                </li>
+                <li class="guide-step">
+                  <div class="step-num">3</div>
+                  <div class="step-content">
+                    กดปุ่มบันทึก (แผ่นดิสก์) จากนั้นเลือกปุ่ม <strong>การทำให้ใช้งานได้ (Deploy) > การจัดการทำให้ใช้งานได้ (New Deployment)</strong><br><br>
+                    * เลือกประเภทเป็น <strong>"เว็บแอป (Web App)"</strong><br>
+                    * กำหนดสิทธิ์ผู้เข้าใช้งานแอปเป็น <strong>"ทุกคน (Anyone)"</strong><br>
+                    * กดปุ่ม Deploy ให้สิทธิ์การเชื่อมต่อ แล้วคัดลอก <strong>"URL ของเว็บแอป (Web App URL)"</strong> มาวางในช่องตั้งค่าด้านข้างได้เลยครับ!
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+    </main>
+    
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+  </div>
+
+  <!-- JavaScript logic files -->
+  <script src="app.js"></script>
+  
+  <!-- สคริปต์เสริมสำหรับปุ่มลัดการโหลดคู่มือและการคัดลอกโค้ด -->
+  <script>
+    // ดึงโค้ด Google Apps Script มาใส่ในคู่มือเพื่อปุ่มคัดลอกด่วน
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('google_apps_script.js')
+        .then(response => response.text())
+        .then(code => {
+          const codeArea = document.getElementById('code-guide-area');
+          if (codeArea) {
+            codeArea.textContent = code;
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching Google Apps Script code for guide:', err);
+        });
+
+      // ดำเนินการคัดลอกเมื่อกดปุ่มคัดลอกโค้ด
+      document.getElementById('copy-code-btn').addEventListener('click', () => {
+        const codeArea = document.getElementById('code-guide-area');
+        navigator.clipboard.writeText(codeArea.textContent)
+          .then(() => {
+            showToast('คัดลอกโค้ดไปยังคลิปบอร์ดแล้ว! นำไปวางใน Google Apps Script ได้เลยครับ', 'success');
+          })
+          .catch(err => {
+            showToast('ไม่สามารถคัดลอกโค้ดได้อัตโนมัติ กรุณาลากคลุมเพื่อคัดลอก', 'error');
+          });
+      });
+    });
+  </script>
+
+</body>
+</html>
