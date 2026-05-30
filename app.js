@@ -38,6 +38,11 @@ function initApp() {
   updateDashboard();
   checkConnectionStatus();
   
+  // ดึงข้อมูลวันลาทั้งหมดจาก Google Sheet ล่าสุดมาซิงค์ในเครื่อง
+  if (navigator.onLine && state.settings.sheetUrl) {
+    pullLeavesFromSheet();
+  }
+  
   // ซิงค์ข้อมูลอัตโนมัติหากมีอินเทอร์เน็ตและมีข้อมูลค้างอยู่
   if (navigator.onLine) {
     syncPendingData();
@@ -46,6 +51,7 @@ function initApp() {
   // ตรวจจับสถานะการเชื่อมต่ออินเทอร์เน็ต
   window.addEventListener('online', () => {
     showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว', 'success');
+    pullLeavesFromSheet();
     syncPendingData();
   });
   window.addEventListener('offline', () => {
@@ -332,6 +338,72 @@ async function testSheetConnection(url) {
   }
 }
 
+// ดึงข้อมูลการลาทั้งหมดจาก Google Sheets มาซิงค์ในเครื่อง
+async function pullLeavesFromSheet() {
+  if (!state.settings.sheetUrl) {
+    return;
+  }
+  
+  showToast('กำลังดึงข้อมูลการลาล่าสุดจาก Google Sheet...', 'info');
+  try {
+    const response = await fetch(state.settings.sheetUrl, { method: 'GET' });
+    const result = await response.json();
+    
+    if (result.status === 'success' && result.leaves) {
+      // รวมร่างข้อมูลจากคลาวด์กับเครื่องเพื่อไม่ให้สูญหาย
+      mergeLeaves(result.leaves);
+      updateDashboard();
+      showToast('ดึงข้อมูลวันลาจาก Google Sheet ล่าสุดสำเร็จแล้ว!', 'success');
+    }
+  } catch (error) {
+    console.error('Pull Leaves Error:', error);
+    showToast('ไม่สามารถดึงข้อมูลวันลาจาก Google Sheet ได้ในขณะนี้', 'error');
+  }
+}
+
+// รวมและล้างข้อมูลวันลาที่ซ้ำซ้อนกันอย่างชาญฉลาด
+function mergeLeaves(sheetLeaves) {
+  // ดึงเฉพาะข้อมูลที่ยังไม่ได้ซิงค์จากความจำเครื่องเก็บไว้ก่อน เพื่อไม่ให้ข้อมูลหาย
+  const unsyncedLocal = state.leaves.filter(l => !l.synced);
+  
+  // จัดรูปข้อมูลจากสเปรดชีตมาจัดให้อยู่ในฟอร์แมตวัตถุฐานข้อมูลของระบบหน้าเว็บ
+  const syncedFromSheet = sheetLeaves.map((l, index) => ({
+    id: 'sheet_' + index + '_' + new Date(l.timestamp).getTime(),
+    name: l.name,
+    date: l.date,
+    type: l.type,
+    reason: l.reason,
+    synced: true,
+    timestamp: l.timestamp
+  }));
+  
+  // รวมร่างสองส่วน: Unsynced ในเครื่อง + Synced จากชีต
+  // ดำเนินการคัดกรองตัวซ้ำซ้อนโดยยึด Key: ชื่อ + วันที่ + ประเภทการลา
+  const uniqueLeaves = [];
+  const keySet = new Set();
+  
+  // 1. นำเข้าข้อมูลค้างที่ยังไม่ซิงค์จากเครื่องก่อน (สำคัญสูงสุด)
+  unsyncedLocal.forEach(l => {
+    const key = `${l.name}_${l.date}_${l.type}`;
+    if (!keySet.has(key)) {
+      keySet.add(key);
+      uniqueLeaves.push(l);
+    }
+  });
+  
+  // 2. นำเข้าข้อมูลที่ได้รับการซิงค์ในฐานข้อมูลคลาวด์ชีตตามหลังมา
+  syncedFromSheet.forEach(l => {
+    const key = `${l.name}_${l.date}_${l.type}`;
+    if (!keySet.has(key)) {
+      keySet.add(key);
+      uniqueLeaves.push(l);
+    }
+  });
+  
+  state.leaves = uniqueLeaves;
+  saveLeavesToLocalStorage();
+}
+
 function checkConnectionStatus() {
   if (!state.settings.sheetUrl) {
     updateConnectionStatus(false);
@@ -387,7 +459,9 @@ function initSettingsController() {
       if (connected) {
         showToast('เชื่อมต่อ Google Sheets สำเร็จ!', 'success');
         updateConnectionStatus(true);
-        // ลองส่งข้อมูลที่ยังไม่ซิงค์
+        // ซิงค์ดึงประวัติล่าสุดจากคลาวด์มาเก็บลงเครื่อง
+        await pullLeavesFromSheet();
+        // ลองส่งข้อมูลที่ค้างอยู่เครื่องยิงขึ้นคลาวด์ชีตต่อ
         syncPendingData();
       } else {
         showToast('ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบ URL หรือสิทธิ์ใน Apps Script', 'error');
